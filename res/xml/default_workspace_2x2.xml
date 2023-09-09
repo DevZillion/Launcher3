@@ -21,13 +21,13 @@
         launcher:screen="0"
         launcher:x="0"
         launcher:y="0"
-        launcher:spanX="3"
+        launcher:spanX="2"
         launcher:spanY="1"
         launcher:packageName="com.google.android.googlequicksearchbox"
         launcher:className="com.google.android.apps.gsa.staticplugins.smartspace.widget.SmartspaceWidgetProvider" />
 
     <!-- Hotseat (We use the screen as the position of the item in the hotseat) -->
-    <!-- Messaging, [All Apps], Dialer -->
+    <!-- Messaging, Dialer -->
 
     <resolve
         launcher:container="-101"
@@ -40,8 +40,6 @@
         <favorite launcher:uri="mms:" />
         <favorite launcher:uri="mmsto:" />
     </resolve>
-
-    <!-- All Apps -->
 
     <resolve
         launcher:container="-101"
@@ -68,14 +66,6 @@
         launcher:y="-1" >
         <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_GALLERY;end" />
         <favorite launcher:uri="#Intent;type=images/*;end" />
-    </resolve>
-
-    <resolve
-        launcher:screen="0"
-        launcher:x="2"
-        launcher:y="-1" >
-        <favorite launcher:uri="#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_MARKET;end" />
-        <favorite launcher:uri="market://details?id=com.android.launcher" />
     </resolve>
 
 </favorites>

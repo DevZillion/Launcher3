@@ -29,6 +29,7 @@ import android.annotation.TargetApi;
 import android.appwidget.AppWidgetHostView;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -63,6 +64,7 @@ import com.android.launcher3.util.Partner;
 import com.android.launcher3.util.WindowBounds;
 import com.android.launcher3.util.window.WindowManagerProxy;
 
+import com.android.quickstep.SystemUiProxy;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -75,7 +77,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class InvariantDeviceProfile {
+public class InvariantDeviceProfile implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final String TAG = "IDP";
     // We do not need any synchronization for this variable as its only written on UI thread.
@@ -195,6 +197,7 @@ public class InvariantDeviceProfile {
     public Rect defaultWidgetPadding;
 
     private final ArrayList<OnIDPChangeListener> mChangeListeners = new ArrayList<>();
+    private Context mContext;
 
     @VisibleForTesting
     public InvariantDeviceProfile() { }
@@ -217,6 +220,23 @@ public class InvariantDeviceProfile {
                         onConfigChanged(displayContext);
                     }
                 });
+
+        mContext = context;
+        Utilities.getPrefs(context).registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (DeviceProfile.KEY_PHONE_TASKBAR.equals(key)) {
+            // Create the illusion of this taking effect immediately
+            // Also needed because TaskbarManager inits before SystemUiProxy on start
+            boolean enabled = Utilities.getPrefs(mContext).getBoolean(DeviceProfile.KEY_PHONE_TASKBAR, false);
+            SystemUiProxy.INSTANCE.get(mContext).setTaskbarEnabled(enabled);
+
+            onConfigChanged(mContext, true);
+        } else if (DeviceProfile.KEY_PHONE_OVERVIEW_GRID.equals(key)) {
+            onConfigChanged(mContext, false);
+        }
     }
 
     /**
@@ -469,6 +489,10 @@ public class InvariantDeviceProfile {
     }
 
     private void onConfigChanged(Context context) {
+        onConfigChanged(context, false);
+    }
+
+    private void onConfigChanged(Context context, boolean taskbarChanged) {
         Object[] oldState = toModelState();
 
         // Re-init grid
@@ -477,7 +501,7 @@ public class InvariantDeviceProfile {
 
         boolean modelPropsChanged = !Arrays.equals(oldState, toModelState());
         for (OnIDPChangeListener listener : mChangeListeners) {
-            listener.onIdpChanged(modelPropsChanged);
+            listener.onIdpChanged(modelPropsChanged, taskbarChanged);
         }
     }
 
@@ -753,7 +777,7 @@ public class InvariantDeviceProfile {
         /**
          * Called when the device provide changes
          */
-        void onIdpChanged(boolean modelPropertiesChanged);
+        void onIdpChanged(boolean modelPropertiesChanged, boolean taskbarChanged);
     }
 
 
